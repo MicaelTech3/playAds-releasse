@@ -1,0 +1,32 @@
+# Arquivos gerados em runtime pelo PlayAds
+activation.json
+playads_config.json
+local_playlists.json
+local_anuncios.json
+local_logs.json
+local_schedules.json
+
+# Pasta de mídia local
+local/
+dist/PlayAds/local/
+
+# Restart temporários
+_playads_restart.vbs
+_playads_restart.bat
+_playads_fb.bat
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.spec
+build/
+dist_installer/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
