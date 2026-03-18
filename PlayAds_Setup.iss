@@ -5,7 +5,7 @@
 ; ============================================================
 
 #define AppName      "PlayAds"
-#define AppVersion   "7.0"
+#define AppVersion   "1.0"
 #define AppPublisher "TechSolution"
 #define AppURL       "https://playads-app.web.app"
 #define AppExeName   "PlayAds.exe"
