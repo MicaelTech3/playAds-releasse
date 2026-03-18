@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlayAds — Player Profissional de Anúncios</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #08060f;
+  --bg2:      #100c1e;
+  --bg3:      #16112a;
+  --p1:       #8b5cf6;
+  --p2:       #6d28d9;
+  --p3:       #4c1d95;
+  --p-light:  #c4b5fd;
+  --cyan:     #67e8f9;
+  --text:     #ede8ff;
+  --muted:    #8878aa;
+  --muted2:   #5a5070;
+  --border:   rgba(139,92,246,0.14);
+  --border2:  rgba(139,92,246,0.28);
+  --card:     rgba(139,92,246,0.05);
+  --card2:    rgba(255,255,255,0.025);
+  --green:    #4ade80;
+  --warn:     #fbbf24;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── CURSOR GLOW ── */
+.cursor-glow {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);
+  position: fixed; pointer-events: none; z-index: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+}
+
+/* ── GRID BG ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 100%);
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 0 40px; height: 68px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid transparent;
+  transition: all 0.4s;
+}
+nav.scrolled {
+  background: rgba(8,6,15,0.88);
+  border-bottom-color: var(--border);
+  backdrop-filter: blur(24px);
+}
+.logo {
+  display: flex; align-items: center; gap: 12px;
+  text-decoration: none; cursor: pointer;
+}
+.logo-mark {
+  width: 38px; height: 38px; border-radius: 11px;
+  background: linear-gradient(135deg, var(--p1), var(--p2));
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 24px rgba(139,92,246,0.4);
+  flex-shrink: 0;
+}
+.logo-name {
+  font-family: 'Fraunces', serif;
+  font-size: 22px; font-weight: 600;
+  color: var(--text); letter-spacing: -0.5px;
+}
+.logo-tag {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 3px 8px; border-radius: 99px;
+  background: rgba(139,92,246,0.12); color: var(--p-light);
+  border: 1px solid var(--border2); letter-spacing: 0.5px;
+}
+
+.nav-links {
+  display: flex; align-items: center; gap: 4px;
+}
+.nav-link {
+  padding: 8px 16px; border-radius: 99px; font-size: 14px; font-weight: 500;
+  color: var(--muted); cursor: pointer; transition: all 0.2s;
+  border: 1px solid transparent; background: none;
+  font-family: 'DM Sans', sans-serif;
+}
+.nav-link:hover { color: var(--text); background: var(--card); }
+.nav-link.active { color: var(--p-light); background: rgba(139,92,246,0.1); border-color: var(--border2); }
+
+.nav-cta {
+  background: var(--p1); color: white; border: none; border-radius: 10px;
+  padding: 10px 22px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block;
+  box-shadow: 0 0 24px rgba(139,92,246,0.3);
+}
+.nav-cta:hover { background: var(--p2); box-shadow: 0 0 36px rgba(139,92,246,0.5); transform: translateY(-1px); }
+
+/* ── PAGES ── */
+.page { display: none; animation: fadeIn 0.4s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
+
+/* ── WRAP ── */
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 40px; position: relative; z-index: 1; }
+
+/* ── SECTION COMMON ── */
+.section { padding: 100px 0; }
+.section-tag {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--p1); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-tag::before { content: ''; width: 24px; height: 1px; background: var(--p1); }
+.section-title {
+  font-family: 'Fraunces', serif; font-size: clamp(38px, 5vw, 62px);
+  font-weight: 600; letter-spacing: -2px; line-height: 1.05;
+  margin-bottom: 18px;
+}
+.section-title em { font-style: italic; color: var(--p-light); }
+.section-sub { font-size: 17px; color: var(--muted); line-height: 1.7; max-width: 520px; }
+
+/* ══════════════════════════════════════════
+   HOME PAGE
+══════════════════════════════════════════ */
+.hero {
+  min-height: 100vh; display: flex; align-items: center;
+  padding: 140px 0 80px;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: var(--cyan); letter-spacing: 2px; text-transform: uppercase;
+  padding: 7px 16px; border-radius: 99px;
+  background: rgba(103,232,249,0.06); border: 1px solid rgba(103,232,249,0.2);
+  margin-bottom: 32px;
+}
+.hero-eyebrow span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--cyan);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+.hero h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(56px, 9vw, 110px);
+  font-weight: 700; letter-spacing: -4px; line-height: 0.92;
+  margin-bottom: 32px;
+}
+.hero h1 .accent {
+  background: linear-gradient(135deg, var(--p1) 0%, var(--cyan) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero h1 .italic { font-style: italic; font-weight: 300; }
+.hero-desc {
+  font-size: 18px; color: var(--muted); line-height: 1.7;
+  max-width: 500px; margin-bottom: 48px;
+}
+.hero-btns { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, var(--p1), var(--p2));
+  color: white; border: none; border-radius: 14px;
+  padding: 16px 32px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  box-shadow: 0 0 48px rgba(139,92,246,0.4);
+  transition: all 0.25s; position: relative; overflow: hidden;
+}
+.btn-primary::after {
+  content: ''; position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transition: left 0.5s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 64px rgba(139,92,246,0.6); }
+.btn-primary:hover::after { left: 100%; }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--muted); font-size: 15px; font-weight: 500;
+  text-decoration: none; transition: color 0.2s; cursor: pointer;
+  background: none; border: none; font-family: 'DM Sans', sans-serif;
+}
+.btn-ghost:hover { color: var(--text); }
+.hero-meta {
+  font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2);
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.hero-meta span::before { content: '·'; margin-right: 8px; }
+.hero-meta span:first-child::before { content: ''; margin: 0; }
+
+/* Stats strip */
+.stats-strip {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 48px 0;
+  background: linear-gradient(90deg, transparent, rgba(139,92,246,0.03), transparent);
+}
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+.stat-item { text-align: center; padding: 0 20px; position: relative; }
+.stat-item:not(:last-child)::after {
+  content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  height: 40px; width: 1px; background: var(--border);
+}
+.stat-num {
+  font-family: 'Fraunces', serif;
+  font-size: 52px; font-weight: 600; letter-spacing: -3px;
+  background: linear-gradient(135deg, var(--text) 40%, var(--muted));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  line-height: 1;
+}
+.stat-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 8px; }
+
+/* Features */
+.features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 64px; }
+.feat-card {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 32px 28px; position: relative; overflow: hidden;
+  transition: all 0.3s; cursor: default;
+}
+.feat-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at top left, rgba(139,92,246,0.08), transparent 70%);
+  opacity: 0; transition: opacity 0.3s;
+}
+.feat-card:hover { border-color: var(--border2); transform: translateY(-4px); }
+.feat-card:hover::before { opacity: 1; }
+.feat-num {
+  font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2);
+  margin-bottom: 24px; letter-spacing: 1px;
+}
+.feat-icon {
+  width: 52px; height: 52px; border-radius: 16px; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+.feat-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 10px; }
+.feat-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+/* Quote/CTA band */
+.cta-band {
+  margin: 0 0 100px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(103,232,249,0.05));
+  border: 1px solid var(--border2); border-radius: 28px; padding: 64px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.cta-band::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 300px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--p1), transparent);
+}
+.cta-quote {
+  font-family: 'Fraunces', serif; font-size: clamp(28px, 4vw, 48px);
+  font-weight: 300; font-style: italic; letter-spacing: -1.5px;
+  line-height: 1.2; color: var(--text); max-width: 700px; margin: 0 auto 40px;
+}
+.cta-quote strong { font-weight: 600; font-style: normal; color: var(--p-light); }
+
+/* ══════════════════════════════════════════
+   SOFTWARE PAGE
+══════════════════════════════════════════ */
+.download-hero {
+  padding: 160px 0 80px;
+  text-align: center;
+}
+.version-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: var(--cyan); letter-spacing: 1.5px;
+  padding: 6px 14px; border-radius: 99px;
+  background: rgba(103,232,249,0.06); border: 1px solid rgba(103,232,249,0.2);
+  margin-bottom: 24px;
+}
+.dl-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(48px, 7vw, 80px); font-weight: 700;
+  letter-spacing: -3px; line-height: 1; margin-bottom: 20px;
+}
+.dl-sub { font-size: 18px; color: var(--muted); max-width: 480px; margin: 0 auto 48px; line-height: 1.6; }
+.dl-btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, var(--p1), var(--p2));
+  color: white; border: none; border-radius: 16px;
+  padding: 20px 44px; font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  box-shadow: 0 0 60px rgba(139,92,246,0.5);
+  transition: all 0.3s; letter-spacing: -0.5px;
+  animation: breathe 3s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100% { box-shadow: 0 0 60px rgba(139,92,246,0.5); }
+  50% { box-shadow: 0 0 80px rgba(139,92,246,0.75), 0 0 120px rgba(139,92,246,0.2); }
+}
+.dl-btn:hover { transform: translateY(-3px) scale(1.02); }
+.dl-meta {
+  display: flex; align-items: center; justify-content: center; gap: 28px;
+  margin-top: 28px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2);
+  flex-wrap: wrap;
+}
+.dl-meta span { display: flex; align-items: center; gap: 6px; }
+.dot-green { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; }
+
+/* Install steps */
+.steps { padding: 0 0 100px; }
+.steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 60px; }
+.step-card {
+  background: var(--card2); border: 1px solid var(--border); border-radius: 18px;
+  padding: 28px 24px; position: relative;
+}
+.step-num {
+  font-family: 'Fraunces', serif; font-size: 48px; font-weight: 700;
+  color: var(--border2); letter-spacing: -2px; line-height: 1; margin-bottom: 16px;
+}
+.step-title { font-weight: 600; font-size: 15px; margin-bottom: 8px; }
+.step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* Changelog */
+.changelog { padding: 0 0 100px; }
+.changelog-item {
+  display: flex; gap: 32px; padding: 28px 0;
+  border-bottom: 1px solid var(--border);
+}
+.changelog-ver {
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  color: var(--p-light); background: rgba(139,92,246,0.1);
+  border: 1px solid var(--border2); border-radius: 8px;
+  padding: 6px 14px; height: fit-content; white-space: nowrap;
+  flex-shrink: 0;
+}
+.changelog-title { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+.changelog-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.changelog-tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.tag {
+  font-family: 'DM Mono', monospace; font-size: 10px; padding: 3px 9px;
+  border-radius: 99px; letter-spacing: 0.5px;
+}
+.tag-new { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+.tag-fix { background: rgba(251,191,36,0.1); color: var(--warn); border: 1px solid rgba(251,191,36,0.2); }
+.tag-imp { background: rgba(139,92,246,0.1); color: var(--p-light); border: 1px solid var(--border2); }
+
+/* ══════════════════════════════════════════
+   SOBRE PAGE
+══════════════════════════════════════════ */
+.about-hero { padding: 160px 0 80px; }
+.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; padding: 80px 0; }
+.about-img {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 24px;
+  aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.about-img-inner {
+  width: 80px; height: 80px; border-radius: 24px;
+  background: linear-gradient(135deg, var(--p1), var(--p2));
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 80px rgba(139,92,246,0.6);
+}
+.about-values { display: flex; flex-direction: column; gap: 20px; margin-top: 40px; }
+.value-item {
+  display: flex; gap: 18px; padding: 22px;
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 16px; transition: border-color 0.2s;
+}
+.value-item:hover { border-color: var(--border2); }
+.value-icon { font-size: 24px; flex-shrink: 0; }
+.value-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+.value-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+/* ══════════════════════════════════════════
+   DIFERENCIAIS PAGE
+══════════════════════════════════════════ */
+.diff-hero { padding: 160px 0 80px; }
+.comparison-table { margin-top: 60px; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+.comp-header {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0;
+  background: var(--bg3);
+}
+.comp-col-header { padding: 20px 24px; font-size: 14px; font-weight: 600; }
+.comp-col-header.highlight { background: rgba(139,92,246,0.12); color: var(--p-light); text-align: center; border-left: 1px solid var(--border2); border-right: 1px solid var(--border2); }
+.comp-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0;
+  border-top: 1px solid var(--border);
+}
+.comp-row:nth-child(even) { background: rgba(255,255,255,0.012); }
+.comp-cell { padding: 16px 24px; font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.comp-cell.highlight { background: rgba(139,92,246,0.05); border-left: 1px solid var(--border2); border-right: 1px solid var(--border2); color: var(--text); justify-content: center; }
+.check { color: var(--green); font-size: 16px; }
+.cross { color: var(--muted2); font-size: 16px; }
+
+/* Use cases */
+.usecases { padding: 0 0 100px; }
+.usecase-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 60px; }
+.usecase-card {
+  background: var(--card2); border: 1px solid var(--border); border-radius: 20px;
+  padding: 32px 28px; transition: all 0.3s; position: relative; overflow: hidden;
+}
+.usecase-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--p1), var(--cyan));
+  transform: scaleX(0); transition: transform 0.3s; transform-origin: left;
+}
+.usecase-card:hover { border-color: var(--border2); transform: translateY(-4px); }
+.usecase-card:hover::after { transform: scaleX(1); }
+.usecase-icon { font-size: 36px; margin-bottom: 20px; }
+.usecase-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 10px; }
+.usecase-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+/* ══════════════════════════════════════════
+   SUPORTE PAGE
+══════════════════════════════════════════ */
+.support-hero { padding: 160px 0 80px; }
+.faq-list { margin-top: 60px; max-width: 760px; }
+.faq-item {
+  border-bottom: 1px solid var(--border); overflow: hidden;
+}
+.faq-q {
+  width: 100%; text-align: left; padding: 24px 0;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 16px; font-weight: 500; color: var(--text);
+  background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif;
+  gap: 20px;
+}
+.faq-q:hover { color: var(--p-light); }
+.faq-arrow { color: var(--muted); transition: transform 0.3s; font-size: 18px; flex-shrink: 0; }
+.faq-item.open .faq-arrow { transform: rotate(45deg); color: var(--p1); }
+.faq-a {
+  font-size: 15px; color: var(--muted); line-height: 1.7;
+  max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s;
+}
+.faq-item.open .faq-a { max-height: 400px; padding-bottom: 24px; }
+.faq-a code { font-family: 'DM Mono', monospace; font-size: 13px; background: var(--bg3); padding: 2px 8px; border-radius: 5px; color: var(--cyan); }
+
+/* Contact */
+.contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 60px; }
+.contact-card {
+  background: var(--card2); border: 1px solid var(--border); border-radius: 20px;
+  padding: 32px 28px; text-align: center; transition: all 0.3s;
+}
+.contact-card:hover { border-color: var(--border2); transform: translateY(-4px); }
+.contact-icon { font-size: 36px; margin-bottom: 16px; }
+.contact-title { font-weight: 600; font-size: 16px; margin-bottom: 8px; }
+.contact-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+.contact-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--p-light); font-size: 13px; text-decoration: none; font-weight: 500;
+  transition: color 0.2s;
+}
+.contact-link:hover { color: var(--p1); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border); padding: 48px 0;
+  position: relative; z-index: 1;
+}
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 60px; margin-bottom: 48px; }
+.footer-brand p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-top: 16px; max-width: 280px; }
+.footer-col-title { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+.footer-links { display: flex; flex-direction: column; gap: 10px; }
+.footer-link { font-size: 14px; color: var(--muted); text-decoration: none; transition: color 0.2s; cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; text-align: left; }
+.footer-link:hover { color: var(--text); }
+.footer-bottom {
+  border-top: 1px solid var(--border); padding-top: 28px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+}
+.footer-copy { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .features-grid, .steps-grid, .usecase-grid, .contact-grid { grid-template-columns: 1fr 1fr; }
+  .stats-grid { grid-template-columns: 2fr 2fr; }
+  .about-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .nav-links { display: none; }
+}
+@media (max-width: 600px) {
+  .features-grid, .steps-grid, .usecase-grid, .contact-grid, .stats-grid { grid-template-columns: 1fr; }
+  .wrap { padding: 0 20px; }
+  nav { padding: 0 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <div class="logo" onclick="showPage('home')">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+    </div>
+    <span class="logo-name">PlayAds</span>
+    <span class="logo-tag">v7.0</span>
+  </div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('home')" id="nav-home">Início</button>
+    <button class="nav-link" onclick="showPage('software')" id="nav-software">Software</button>
+    <button class="nav-link" onclick="showPage('diferenciais')" id="nav-diferenciais">Diferenciais</button>
+    <button class="nav-link" onclick="showPage('sobre')" id="nav-sobre">Sobre</button>
+    <button class="nav-link" onclick="showPage('suporte')" id="nav-suporte">Suporte</button>
+  </div>
+  <a id="nav-dl-btn" href="#" class="nav-cta">⬇ Baixar</a>
+</nav>
+
+<!-- ══ HOME ══ -->
+<div class="page active" id="page-home">
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-eyebrow"><span></span>Player Profissional de Anúncios</div>
+      <h1>
+        Anúncios<br>
+        <span class="italic">que tocam</span><br>
+        <span class="accent">sozinhos.</span>
+      </h1>
+      <p class="hero-desc">Automatize completamente sua grade de anúncios. Sincronização em nuvem, agendamento preciso e controle de volume inteligente.</p>
+      <div class="hero-btns">
+        <a id="hero-dl-btn" href="#" class="btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar PlayAds
+        </a>
+        <button class="btn-ghost" onclick="showPage('software')">Ver todos os recursos →</button>
+      </div>
+      <div class="hero-meta">
+        <span>Windows 10 / 11</span>
+        <span>Gratuito</span>
+        <span>Sem assinatura</span>
+        <span id="hero-version">v7.0</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-strip">
+    <div class="wrap">
+      <div class="stats-grid">
+        <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">Automático</div></div>
+        <div class="stat-item"><div class="stat-num">24/7</div><div class="stat-label">Funcionamento</div></div>
+        <div class="stat-item"><div class="stat-num">0ms</div><div class="stat-label">Latência local</div></div>
+        <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">Agendamentos</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-tag">Funcionalidades</div>
+      <h2 class="section-title">Tudo que você<br><em>realmente precisa.</em></h2>
+      <p class="section-sub">Desenvolvido para rádios, estabelecimentos e ambientes que precisam de anúncios profissionais sem complicação.</p>
+
+      <div class="features-grid">
+        <div class="feat-card">
+          <div class="feat-num">01</div>
+          <div class="feat-icon" style="background:rgba(139,92,246,0.1)">⏰</div>
+          <div class="feat-title">Agendamento preciso</div>
+          <div class="feat-desc">Configure horários e dias da semana para cada anúncio. Toca automaticamente na hora exata, todo dia.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-num">02</div>
+          <div class="feat-icon" style="background:rgba(103,232,249,0.08)">🔊</div>
+          <div class="feat-title">Duck automático</div>
+          <div class="feat-desc">Reduz o volume de outros aplicativos ao tocar anúncios e restaura depois. Transparente e suave.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-num">03</div>
+          <div class="feat-icon" style="background:rgba(74,222,128,0.08)">☁️</div>
+          <div class="feat-title">Nuvem em tempo real</div>
+          <div class="feat-desc">Playlists sincronizadas via Firebase. Atualize do painel web e o player recebe na hora.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-num">04</div>
+          <div class="feat-icon" style="background:rgba(251,191,36,0.08)">💾</div>
+          <div class="feat-title">Cache local</div>
+          <div class="feat-desc">Baixa automaticamente os arquivos de mídia. Funciona offline após o primeiro sync.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-num">05</div>
+          <div class="feat-icon" style="background:rgba(139,92,246,0.1)">📱</div>
+          <div class="feat-title">Painel web</div>
+          <div class="feat-desc">Interface completa para gerenciar playlists, anúncios e monitorar o player de qualquer dispositivo.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-num">06</div>
+          <div class="feat-icon" style="background:rgba(103,232,249,0.08)">🚀</div>
+          <div class="feat-title">Iniciar com o sistema</div>
+          <div class="feat-desc">Configure para abrir com o Windows automaticamente. Zero intervenção, zero esquecimento.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="cta-band">
+      <p class="cta-quote">"Seu anúncio vai tocar às <strong>08:30</strong>, todo dia, mesmo que você esteja dormindo."</p>
+      <a id="cta-dl-btn" href="#" class="btn-primary" style="font-size:15px; padding:14px 28px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Começar agora — é grátis
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SOFTWARE ══ -->
+<div class="page" id="page-software">
+  <section class="download-hero">
+    <div class="wrap" style="text-align:center">
+      <div class="version-badge"><span class="dot-green"></span><span id="sw-version">Versão 7.0 · Sempre atualizado</span></div>
+      <h1 class="dl-title">Baixar PlayAds</h1>
+      <p class="dl-sub">Instalador completo. Instala Python, dependências e o player automaticamente.</p>
+      <a id="sw-dl-btn" href="#" class="dl-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" width="22" height="22"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        PlayAds_Setup.exe
+      </a>
+      <div class="dl-meta">
+        <span><span class="dot-green"></span> Windows 10 / 11 · 64-bit</span>
+        <span id="sw-size">· Carregando...</span>
+        <span>· Gratuito</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps">
+    <div class="wrap">
+      <div class="section-tag">Instalação</div>
+      <h2 class="section-title">Pronto em <em>4 passos.</em></h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <div class="step-title">Baixar o instalador</div>
+          <div class="step-desc">Clique em Baixar e salve o <code>PlayAds_Setup.exe</code> no seu computador.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <div class="step-title">Executar o setup</div>
+          <div class="step-desc">Abra o instalador. Ele cuida de Python e todas as dependências automaticamente.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <div class="step-title">Ativar com o código</div>
+          <div class="step-desc">Use seu código de ativação do painel web para conectar o player à sua conta.</div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">04</div>
+          <div class="step-title">Configurar e usar</div>
+          <div class="step-desc">Crie playlists no painel web. O player sincroniza e toca automaticamente.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="changelog">
+    <div class="wrap">
+      <div class="section-tag">Histórico</div>
+      <h2 class="section-title"><em>Changelog</em></h2>
+      <div class="faq-list" style="max-width:100%">
+        <div class="changelog-item">
+          <div class="changelog-ver">v7.0</div>
+          <div>
+            <div class="changelog-title">Restart automático após ativação</div>
+            <div class="changelog-desc">O player reinicia sozinho após ativar, sem precisar fechar e abrir manualmente. Loading page animada durante o processo.</div>
+            <div class="changelog-tags">
+              <span class="tag tag-new">NOVO</span>
+              <span class="tag tag-new">NOVO</span>
+            </div>
+          </div>
+        </div>
+        <div class="changelog-item">
+          <div class="changelog-ver">v7.0</div>
+          <div>
+            <div class="changelog-title">Iniciar com o sistema</div>
+            <div class="changelog-desc">Toggle na tela de conta para adicionar o PlayAds ao startup do Windows, macOS ou Linux. Remove automaticamente ao desconectar.</div>
+            <div class="changelog-tags"><span class="tag tag-new">NOVO</span></div>
+          </div>
+        </div>
+        <div class="changelog-item">
+          <div class="changelog-ver">v7.0</div>
+          <div>
+            <div class="changelog-title">Verificação de dependências</div>
+            <div class="changelog-desc">Seção em Configurações mostra o status de cada dependência e permite instalar com um clique dentro do próprio app.</div>
+            <div class="changelog-tags"><span class="tag tag-new">NOVO</span></div>
+          </div>
+        </div>
+        <div class="changelog-item">
+          <div class="changelog-ver">v6.1</div>
+          <div>
+            <div class="changelog-title">Cache local e sync de horários</div>
+            <div class="changelog-desc">Arquivos de mídia baixados automaticamente. Horários sincronizados com o cache local para funcionamento offline.</div>
+            <div class="changelog-tags"><span class="tag tag-imp">MELHORIA</span><span class="tag tag-fix">CORREÇÃO</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══ DIFERENCIAIS ══ -->
+<div class="page" id="page-diferenciais">
+  <section class="diff-hero">
+    <div class="wrap">
+      <div class="section-tag">Por que PlayAds</div>
+      <h1 class="section-title" style="font-size:clamp(48px,7vw,80px)">A diferença que<br><em>você sente.</em></h1>
+      <p class="section-sub">Comparamos com as alternativas disponíveis. Veja por que o PlayAds é a escolha certa.</p>
+
+      <div class="comparison-table">
+        <div class="comp-header">
+          <div class="comp-col-header" style="color:var(--muted)">Recurso</div>
+          <div class="comp-col-header highlight">PlayAds ✦</div>
+          <div class="comp-col-header" style="color:var(--muted); text-align:center">Alternativas</div>
+        </div>
+        <div class="comp-row">
+          <div class="comp-cell">Agendamento por horário e dia</div>
+          <div class="comp-cell highlight"><span class="check">✓</span> Completo</div>
+          <div class="comp-cell" style="justify-content:center"><span class="cross">—</span> Limitado</div>
+        </div>
+        <div class="comp-row">
+          <div class="comp-cell">Duck automático de volume</div>
+          <div class="comp-cell highlight"><span class="check">✓</span> Via pycaw</div>
+          <div class="comp-cell" style="justify-content:center"><span class="cross">✗</span> Não tem</div>
+        </div>
+        <div class="comp-row">
+          <div class="comp-cell">Sincronização em nuvem</div>
+          <div class="comp-cell highlight"><span class="check">✓</span> Firebase RT</div>
+          <div class="comp-cell" style="justify-content:center"><span class="cross">—</span> Manual</div>
+        </div>
+        <div class="comp-row">
+          <div class="comp-cell">Painel web remoto</div>
+          <div class="comp-cell highlight"><span class="check">✓</span> Incluso</div>
+          <div class="comp-cell" style="justify-content:center"><span class="cross">✗</span> Pago à parte</div>
+        </div>
+        <div class="comp-row">
+          <div class="comp-cell">Cache local / modo offline</div>
+          <div class="comp-cell highlight"><span class="check">✓</span> Automático</div>
+          <div class="comp-cell" style="justify-content:center"><span class="cross">✗</span> Não tem</div>
+        </div>
+        <div class="comp-row">
+          <div class="comp-cell">Funciona sem internet</div>
+          <div class="comp-cell highlight"><span class="check">✓</span> Após sync</div>
+          <div class="comp-cell" style="justify-content:center"><span class="cross">✗</span> Não</div>
+        </div>
+        <div class="comp-row">
+          <div class="comp-cell">Preço</div>
+          <div class="comp-cell highlight"><span class="check">✓</span> Gratuito</div>
+          <div class="comp-cell" style="justify-content:center">R$ 50–300/mês</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="usecases">
+    <div class="wrap">
+      <div class="section-tag">Onde usar</div>
+      <h2 class="section-title">Feito para<br><em>quem precisa.</em></h2>
+      <div class="usecase-grid">
+        <div class="usecase-card">
+          <div class="usecase-icon">📻</div>
+          <div class="usecase-title">Rádios e podcasts</div>
+          <div class="usecase-desc">Programe intervalos comerciais com precisão de segundos. Sem operador, sem erro.</div>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon">🏪</div>
+          <div class="usecase-title">Lojas e comércio</div>
+          <div class="usecase-desc">Anuncie promoções automaticamente. Toca no horário certo, todo dia, sem ninguém lembrar.</div>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon">🏋️</div>
+          <div class="usecase-title">Academias e estúdios</div>
+          <div class="usecase-desc">Anúncios entre músicas sem interromper a experiência. Duck suave e automático.</div>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon">🏨</div>
+          <div class="usecase-title">Hotéis e recepções</div>
+          <div class="usecase-desc">Informe serviços e horários automaticamente. Mude a grade pelo celular de qualquer lugar.</div>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon">🎓</div>
+          <div class="usecase-title">Escolas e universidades</div>
+          <div class="usecase-desc">Avisos, eventos e comunicados no horário programado. Controle centralizado via painel web.</div>
+        </div>
+        <div class="usecase-card">
+          <div class="usecase-icon">🏢</div>
+          <div class="usecase-title">Redes e franquias</div>
+          <div class="usecase-desc">Um painel, múltiplos players. Atualize a programação de todas as unidades ao mesmo tempo.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══ SOBRE ══ -->
+<div class="page" id="page-sobre">
+  <section class="about-hero">
+    <div class="wrap">
+      <div class="section-tag">Nossa história</div>
+      <h1 class="section-title" style="font-size:clamp(48px,7vw,80px)">Construído por<br><em>quem usa.</em></h1>
+      <p class="section-sub">O PlayAds nasceu de uma necessidade real: automatizar anúncios de áudio sem depender de soluções caras, complexas ou que simplesmente não funcionam bem.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="about-grid">
+      <div>
+        <div class="about-img">
+          <div class="about-img-inner">
+            <svg viewBox="0 0 24 24" fill="white" width="36" height="36"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p style="font-family:'Fraunces',serif; font-size:22px; font-weight:300; font-style:italic; line-height:1.5; color:var(--text); margin-bottom:24px; letter-spacing:-0.5px;">"Queríamos algo que funcionasse às 8h da manhã, sem ninguém apertar nada. Então construímos."</p>
+        <p style="font-size:15px; color:var(--muted); line-height:1.7; margin-bottom:20px;">A TechSolution desenvolve ferramentas de automação para comunicação e mídia. O PlayAds é nossa solução focada em reprodução profissional de anúncios de áudio com sincronização em nuvem.</p>
+        <p style="font-size:15px; color:var(--muted); line-height:1.7;">Cada funcionalidade foi construída resolvendo um problema real de quem trabalha com rádios, estabelecimentos comerciais e gestão de comunicação interna.</p>
+
+        <div class="about-values">
+          <div class="value-item">
+            <div class="value-icon">🎯</div>
+            <div>
+              <div class="value-title">Foco no problema real</div>
+              <div class="value-desc">Não adicionamos features por adicionar. Cada recurso resolve uma dor específica de quem gerencia anúncios de áudio.</div>
+            </div>
+          </div>
+          <div class="value-item">
+            <div class="value-icon">🔒</div>
+            <div>
+              <div class="value-title">Confiabilidade acima de tudo</div>
+              <div class="value-desc">Funciona offline, guarda cache local e mantém os agendamentos mesmo sem internet. Porque anúncios não podem falhar.</div>
+            </div>
+          </div>
+          <div class="value-item">
+            <div class="value-icon">💜</div>
+            <div>
+              <div class="value-title">Simples por fora, robusto por dentro</div>
+              <div class="value-desc">A interface é limpa e intuitiva. Por baixo, Firebase em tempo real, sincronização de cache e duck de volume com fade.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SUPORTE ══ -->
+<div class="page" id="page-suporte">
+  <section class="support-hero">
+    <div class="wrap">
+      <div class="section-tag">Suporte</div>
+      <h1 class="section-title" style="font-size:clamp(48px,7vw,80px)">Como podemos<br><em>ajudar?</em></h1>
+      <p class="section-sub">Respostas para as dúvidas mais comuns. Se não encontrar o que precisa, entre em contato.</p>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            O PlayAds precisa de internet para funcionar?
+            <span class="faq-arrow">+</span>
+          </button>
+          <div class="faq-a">Não, após a primeira sincronização os arquivos de mídia ficam em cache local e o player funciona completamente offline. A internet é necessária apenas para sincronizar mudanças novas do painel web.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Como o duck automático de volume funciona?
+            <span class="faq-arrow">+</span>
+          </button>
+          <div class="faq-a">O PlayAds usa a biblioteca <code>pycaw</code> para controlar o volume de outros aplicativos diretamente pelo Windows Audio Session API. Ao iniciar um anúncio, o volume dos demais apps é reduzido gradualmente (fade configurável) e restaurado ao terminar.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Posso controlar múltiplos players pelo painel web?
+            <span class="faq-arrow">+</span>
+          </button>
+          <div class="faq-a">Sim. Cada instalação do PlayAds tem um código único de ativação. Você pode gerenciar todos os players pela mesma conta no painel web em <code>playads-app.web.app</code>, acompanhar o status de cada um e enviar playlists individualmente.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            O que acontece se o computador reiniciar?
+            <span class="faq-arrow">+</span>
+          </button>
+          <div class="faq-a">Se você ativou o "Iniciar com o Sistema" nas configurações, o PlayAds abre automaticamente junto com o Windows e retoma os agendamentos. Nenhuma intervenção necessária.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Quais formatos de áudio são suportados?
+            <span class="faq-arrow">+</span>
+          </button>
+          <div class="faq-a">MP3, WAV, OGG e M4A. O PlayAds também suporta URLs do YouTube — ele baixa o áudio automaticamente via <code>yt-dlp</code> e salva no cache local.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            Como atualizo o software?
+            <span class="faq-arrow">+</span>
+          </button>
+          <div class="faq-a">Baixe e execute o novo <code>PlayAds_Setup.exe</code> disponível nesta página. O instalador atualiza mantendo suas configurações e ativação.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            O PlayAds é gratuito para sempre?
+            <span class="faq-arrow">+</span>
+          </button>
+          <div class="faq-a">Sim. O PlayAds é gratuito sem limitação de uso, anúncios ou players. A TechSolution mantém o projeto como produto open-source com suporte ativo.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:0 0 100px">
+    <div class="wrap">
+      <div class="section-tag">Contato</div>
+      <h2 class="section-title">Fale com a<br><em>gente.</em></h2>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon">💬</div>
+          <div class="contact-title">GitHub Issues</div>
+          <div class="contact-desc">Reporte bugs, sugira funcionalidades ou acompanhe o desenvolvimento.</div>
+          <a href="https://github.com/MicaelTech3/playAds-releasse/issues" target="_blank" class="contact-link">Abrir issue →</a>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">📧</div>
+          <div class="contact-title">E-mail</div>
+          <div class="contact-desc">Para dúvidas comerciais, parcerias ou suporte prioritário.</div>
+          <a href="mailto:contato@techsolution.com.br" class="contact-link">contato@techsolution.com.br →</a>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">🌐</div>
+          <div class="contact-title">Painel Web</div>
+          <div class="contact-desc">Acesse o painel de controle para gerenciar playlists e players.</div>
+          <a href="https://playads-app.web.app" target="_blank" class="contact-link">Acessar painel →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <div class="logo-mark">
+            <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+          </div>
+          <span class="logo-name">PlayAds</span>
+        </div>
+        <p>Player profissional de anúncios de áudio com sincronização em nuvem, agendamento preciso e controle automático de volume.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Navegação</div>
+        <div class="footer-links">
+          <button class="footer-link" onclick="showPage('home')">Início</button>
+          <button class="footer-link" onclick="showPage('software')">Software</button>
+          <button class="footer-link" onclick="showPage('diferenciais')">Diferenciais</button>
+          <button class="footer-link" onclick="showPage('sobre')">Sobre</button>
+          <button class="footer-link" onclick="showPage('suporte')">Suporte</button>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Links</div>
+        <div class="footer-links">
+          <a href="https://playads-app.web.app" target="_blank" class="footer-link">Painel Web</a>
+          <a href="https://github.com/MicaelTech3/playAds-releasse" target="_blank" class="footer-link">GitHub</a>
+          <a href="https://github.com/MicaelTech3/playAds-releasse/releases" target="_blank" class="footer-link">Releases</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2025 TechSolution · PlayAds v7.0</span>
+      <span class="footer-copy">Feito com cuidado no Brasil 🇧🇷</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+const GITHUB_USER = 'MicaelTech3';
+const GITHUB_REPO = 'playAds-releasse';
+
+// ── Cursor glow ──
+document.addEventListener('mousemove', e => {
+  const g = document.getElementById('cursorGlow');
+  g.style.left = e.clientX + 'px';
+  g.style.top  = e.clientY + 'px';
+});
+
+// ── Nav scroll ──
+window.addEventListener('scroll', () => {
+  document.getElementById('mainNav').classList.toggle('scrolled', scrollY > 30);
+});
+
+// ── SPA routing ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('page-' + id)?.classList.add('active');
+  document.getElementById('nav-' + id)?.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── FAQ ──
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
+
+// ── GitHub Release ──
+async function fetchRelease() {
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/releases/latest`);
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+
+    const ver = d.tag_name || 'v7.0';
+    const asset = d.assets?.find(a => a.name === 'PlayAds_Setup.exe');
+    const url = asset?.browser_download_url || `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/releases/latest`;
+    const mb  = asset ? (asset.size / 1048576).toFixed(1) + ' MB' : '';
+
+    // Atualiza todos os botões de download
+    ['hero-dl-btn','sw-dl-btn','cta-dl-btn','nav-dl-btn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.href = url;
+    });
+
+    document.getElementById('hero-version').textContent = ver;
+    document.getElementById('sw-version').textContent = `Versão ${ver} · Sempre atualizado`;
+    if (mb) document.getElementById('sw-size').textContent = '· ' + mb;
+
+  } catch {
+    const fallback = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/releases/latest`;
+    ['hero-dl-btn','sw-dl-btn','cta-dl-btn','nav-dl-btn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.href = fallback;
+    });
+    document.getElementById('sw-version').textContent = 'PlayAds v7.0';
+    document.getElementById('sw-size').textContent = '';
+  }
+}
+fetchRelease();
+</script>
+</body>
+</html>
