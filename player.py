@@ -40,22 +40,30 @@ except ImportError:
     HAS_YTDLP = False
 
 # ─── Caminhos ────────────────────────────────────────────────────────────────
+# Quando instalado em C:\Program Files\ o Windows bloqueia escrita na pasta
+# do executável. Dados mutáveis vão para %APPDATA%\PlayAds\ (sempre gravável).
 if getattr(sys, "frozen", False):
-    BASE_DIR   = Path(sys.executable).parent
-    STATIC_DIR = Path(sys._MEIPASS)
+    EXE_DIR    = Path(sys.executable).parent          # C:\Program Files\PlayAds\  (read-only)
+    STATIC_DIR = Path(sys._MEIPASS)                   # arquivos empacotados
+    DATA_DIR   = Path(os.environ.get("APPDATA", Path.home())) / "PlayAds"
 else:
-    BASE_DIR   = Path(__file__).parent
-    STATIC_DIR = BASE_DIR
+    EXE_DIR    = Path(__file__).parent                # pasta do projeto em dev
+    STATIC_DIR = EXE_DIR
+    DATA_DIR   = EXE_DIR                              # em dev, tudo no projeto
 
-LOCAL_DIR       = BASE_DIR / "local"
-LOCAL_DIR.mkdir(exist_ok=True)
+BASE_DIR = DATA_DIR
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+LOCAL_DIR       = DATA_DIR / "local"
+LOCAL_DIR.mkdir(parents=True, exist_ok=True)
+
 CACHE_INDEX     = LOCAL_DIR / ".index.json"
-ACTIVATION_FILE = BASE_DIR / "activation.json"
-CONFIG_FILE     = BASE_DIR / "playads_config.json"
-LOCAL_PL_FILE   = BASE_DIR / "local_playlists.json"
-LOCAL_AD_FILE   = BASE_DIR / "local_anuncios.json"
-LOCAL_LOG_FILE  = BASE_DIR / "local_logs.json"
-SCHEDULES_FILE  = BASE_DIR / "local_schedules.json"
+ACTIVATION_FILE = DATA_DIR / "activation.json"
+CONFIG_FILE     = DATA_DIR / "playads_config.json"
+LOCAL_PL_FILE   = DATA_DIR / "local_playlists.json"
+LOCAL_AD_FILE   = DATA_DIR / "local_anuncios.json"
+LOCAL_LOG_FILE  = DATA_DIR / "local_logs.json"
+SCHEDULES_FILE  = DATA_DIR / "local_schedules.json"
 
 # ─── Firebase ────────────────────────────────────────────────────────────────
 FIREBASE_WEB_API_KEY = "AIzaSyBgwB_2syWdyK5Wc0E9rJIlDnXjwTf1OWE"
@@ -164,16 +172,8 @@ def save_schedules(data):
     SCHEDULES_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 def validate_and_login(codigo, email, senha):
-    """
-    Valida a ativação garantindo que:
-      1. O código existe no Firebase e tem um uid dono.
-      2. O email+senha pertencem a uma conta Firebase válida.
-      3. O uid autenticado bate EXATAMENTE com o uid dono do código.
-    Sem a verificação (3) qualquer conta válida poderia usar o código de outro usuário.
-    """
     codigo = codigo.strip().upper()
 
-    # ── Passo 1: busca o uid dono do código ──────────────────────────────────
     try:
         r = requests.get(f"{FIREBASE_DB_URL}/codigos/{codigo}.json", timeout=10)
         if not r.ok:
@@ -187,7 +187,6 @@ def validate_and_login(codigo, email, senha):
     except Exception as e:
         return None, None, f"Erro de conexão: {e}"
 
-    # ── Passo 2: autentica o email+senha e obtém o uid do usuário ────────────
     try:
         r2 = requests.post(
             f"{FIREBASE_AUTH_URL}:signInWithPassword?key={FIREBASE_WEB_API_KEY}",
@@ -201,7 +200,6 @@ def validate_and_login(codigo, email, senha):
         if not uid_autenticado:
             return None, None, "Falha na autenticação."
 
-        # Armazena o token para uso posterior
         with _AUTH.lock:
             _AUTH.id_token      = auth_data["idToken"]
             _AUTH.refresh_token = auth_data["refreshToken"]
@@ -210,9 +208,7 @@ def validate_and_login(codigo, email, senha):
     except Exception as e:
         return None, None, f"Erro de autenticação: {e}"
 
-    # ── Passo 3: garante que o uid autenticado é o dono do código ────────────
     if uid_autenticado != uid_codigo:
-        # Segurança: não revela qual das duas informações está errada
         return None, None, "Código, e-mail ou senha incorretos."
 
     return uid_autenticado, email, None
@@ -828,7 +824,10 @@ def is_startup_enabled():
     return path is not None and path.exists()
 
 def enable_startup():
-    exe = sys.executable
+    # Aponta para o executável real (EXE_DIR em produção, script em dev)
+    exe = str(Path(sys.executable)) if getattr(sys, "frozen", False) else sys.executable
+    if getattr(sys, "frozen", False):
+        exe = str(EXE_DIR / Path(sys.executable).name)
     try:
         path, sysname = _get_startup_path()
         if path is None:
@@ -877,25 +876,19 @@ def disable_startup():
 # ─── Restart ─────────────────────────────────────────────────────────────────
 def _get_relaunch_cmd():
     if getattr(sys, "frozen", False):
-        return [sys.executable]
+        # Executável compilado: lança o .exe em EXE_DIR
+        return [str(EXE_DIR / Path(sys.executable).name)]
     else:
         py = Path(sys.executable)
         pythonw = py.parent / "pythonw.exe"
         exe = str(pythonw) if pythonw.exists() else str(py)
-        return [exe, str(BASE_DIR / "player.py")]
-
+        return [exe, str(EXE_DIR / "player.py")]
 
 def restart_app():
-    """
-    Reinicia via VBScript simples:
-    aguarda 3s (tempo suficiente para o processo morrer) e relança.
-    Sem WMI — mais compatível e sem falhas silenciosas.
-    """
-    cmd        = _get_relaunch_cmd()
-    # Cada parte entre aspas duplas escapadas para VBS (""valor"")
-    cmd_vbs    = " ".join(f'""{ c }""' for c in cmd)
-
-    vbs_path = BASE_DIR / "_playads_restart.vbs"
+    cmd     = _get_relaunch_cmd()
+    cmd_vbs = " ".join(f'""{ c }""' for c in cmd)
+    # VBS gravado em DATA_DIR (APPDATA) — sempre tem permissão de escrita
+    vbs_path = DATA_DIR / "_playads_restart.vbs"
     vbs_lines = [
         'Set oShell = CreateObject("WScript.Shell")',
         'WScript.Sleep 3000',
@@ -909,9 +902,6 @@ def restart_app():
         time.sleep(0.1)
         try:
             vbs_path.write_text(vbs_content, encoding="utf-8")
-            log.info(f"VBS escrito em: {vbs_path}")
-            for i, ln in enumerate(vbs_lines, 1):
-                log.info(f"  VBS L{i}: {ln}")
             CREATE_NO_WINDOW = 0x08000000
             subprocess.Popen(
                 ["wscript.exe", "/nologo", str(vbs_path)],
@@ -930,16 +920,13 @@ def restart_app():
 
     try: webview.windows[0].destroy()
     except Exception: pass
-
     threading.Thread(target=_go, daemon=True).start()
-
 
 # ═════════════════════════════════════════════════════════════════════════════
 #  BRIDGE
 # ═════════════════════════════════════════════════════════════════════════════
 class Bridge:
 
-    
     def get_events(self):
         events = []
         try:
@@ -958,7 +945,6 @@ class Bridge:
             "config":    cfg,
             "local_dir": str(LOCAL_DIR),
             "schedules": load_schedules(),
-
         }
 
     def play_item_now(self, item_dict):
@@ -1007,7 +993,7 @@ class Bridge:
     def cmd_disconnect(self):
         def _go():
             stop_all()
-            disable_startup()   # limpa startup ao desconectar
+            disable_startup()
             clear_all_local()
             webview.windows[0].destroy()
         threading.Thread(target=_go, daemon=True).start()
@@ -1021,13 +1007,8 @@ class Bridge:
         return {"ok": False, "error": err or "Credenciais inválidas."}
 
     def cmd_restart(self):
-        """Reinicia o aplicativo — chamado após ativação bem-sucedida."""
-        # Lança restart em thread e NÃO retorna nada ao JS
-        # (a janela será destruída antes de qualquer resposta)
         threading.Thread(target=restart_app, daemon=True).start()
-        # Pequena pausa para a thread iniciar antes do processo morrer
         time.sleep(0.1)
-        # Não retorna — evita ObjectDisposedException no pywebview
 
     def open_web(self):
         import webbrowser; webbrowser.open(WEB_URL); return True
@@ -1074,13 +1055,7 @@ class Bridge:
 
     # ── Integrações de plataforma ───────────────────────────────────
     def connect_platform(self, platform_id):
-        msgs = {
-            "spotify":       "Integração direta com Spotify está em desenvolvimento. O duck automático via pycaw já funciona.",
-            "youtube_music": "Controle via pycaw já ativo. API direta em desenvolvimento.",
-            "deezer":        "Controle via pycaw já ativo. Integração planejada para próxima versão.",
-            "amazon_music":  "Controle via pycaw já ativo. API da Amazon tem acesso muito restrito.",
-        }
-        return {"ok": False, "error": msgs.get(platform_id, "Plataforma não reconhecida.")}
+        return {"ok": False, "error": "Integração em desenvolvimento."}
 
     def disconnect_platform(self, platform_id):
         return {"ok": True}
@@ -1147,9 +1122,11 @@ def start_backend(senha):
     threading.Thread(target=precache_all,    daemon=True).start()
 
     log.info(f"Backend iniciado: {ST.email} · {ST.codigo}")
-    log.info(f"pycaw:   {'ativo ✓' if HAS_PYCAW  else 'não instalado'}")
-    log.info(f"yt-dlp:  {'ativo ✓' if HAS_YTDLP  else 'não instalado'}")
-    log.info(f"startup: {'ativo ✓' if is_startup_enabled() else 'desativado'}")
+    log.info(f"Data dir:  {DATA_DIR}")
+    log.info(f"Local dir: {LOCAL_DIR}")
+    log.info(f"pycaw:     {'ativo ✓' if HAS_PYCAW  else 'não instalado'}")
+    log.info(f"yt-dlp:    {'ativo ✓' if HAS_YTDLP  else 'não instalado'}")
+    log.info(f"startup:   {'ativo ✓' if is_startup_enabled() else 'desativado'}")
     return True
 
 
@@ -1164,8 +1141,8 @@ def get_ui_url():
     if not dist_html.exists():
         npm = "npm.cmd" if platform.system() == "Windows" else "npm"
         try:
-            subprocess.run([npm, "install"],      cwd=str(BASE_DIR), check=True)
-            subprocess.run([npm, "run", "build"], cwd=str(BASE_DIR), check=True)
+            subprocess.run([npm, "install"],      cwd=str(EXE_DIR), check=True)
+            subprocess.run([npm, "run", "build"], cwd=str(EXE_DIR), check=True)
         except Exception as e:
             print(f"Erro no build: {e}"); sys.exit(1)
     return str(dist_html)
