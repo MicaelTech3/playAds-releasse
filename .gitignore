@@ -1,32 +1,33 @@
-# Arquivos gerados em runtime pelo PlayAds
+# ── Build / compilação ───────────────────────────────────────────
+dist/
+build/
+
+# ── Dados locais do player ────────────────────────────────────────
 activation.json
 playads_config.json
 local_playlists.json
 local_anuncios.json
 local_logs.json
 local_schedules.json
+spotify_token.json
 
-# Pasta de mídia local
+# ── Pasta de mídia local ──────────────────────────────────────────
 local/
-dist/PlayAds/local/
 
-# Restart temporários
+# ── Restart temporários ───────────────────────────────────────────
 _playads_restart.vbs
 _playads_restart.bat
 _playads_fb.bat
 
-# Python
+# ── Python ───────────────────────────────────────────────────────
 __pycache__/
 *.pyc
 *.pyo
-*.spec
-build/
 
-
-# IDE
+# ── IDE ───────────────────────────────────────────────────────────
 .vscode/
 .idea/
 
-# OS
+# ── OS ───────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
